@@ -1,7 +1,6 @@
 # AwareSVMRichFeatures
-Higher-Order, Adversary-Aware, Double JPEG-Detection via Selected Training on Attacked Samples
 
-## [Higher-Order, Adversary-Aware, Double JPEG-Detection via Selected Training on Attacked Samples]
+## Higher-Order, Adversary-Aware, Double JPEG-Detection via Selected Training on Attacked Samples
 
 (https://ieeexplore.ieee.org/document/8081213)
 
