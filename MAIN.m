@@ -1,0 +1,85 @@
+% This code generate all the data necessary for training and testing the aware SVM.
+% From the RAISE, the images are single and double compressed with given QF1s and QF2, and attacked (with the selected attacks and parameters).
+% They are eventually subsampled.
+% Then, the feature vectors are computed for all the images.
+
+clear all
+close all
+clc
+
+addpath(genpath('.\jpeg_readwrite'))
+
+%-------------------------------------------------------------------------%
+% SYSTEM INPUT PARAMETERS
+%-------------------------------------------------------------------------%
+
+% Dataset folder
+DATASET_PATH = 'C:\RAISE2K\';
+
+% Directory and sub-directories where origin dataset is split into train and test 
+FEATURES_TARGET_ROOT = 'C:\FROM_RAISE\';
+DATASET_TRAIN_ROOT = 'TRAIN';
+DATASET_TEST_ROOT = 'TEST';
+
+% Define the image format 
+IMG_FORMAT = 'TIF';
+
+% Number of train images
+N_TRAIN = 1700;
+
+% Quality factors
+QF_1 = 60:10:80;
+QF_2 = 75;
+
+ATTACKS_TRAIN = {'Resize', 'StammDithering', 'Desynchronization'};
+ATK_PARAMS_TRAIN = {0.9, 1, 0};
+
+ATTACKS_TEST = {'RotationNN', 'Mirroring', 'SeamCarving', 'StammDithering', ...
+     'RotationBIC', 'MedianFilter', 'HistogramEqualization', 'HistEq', ...
+     'Resize', 'Resize_LinInterp', 'Resize_Nearest', 'WaveletDenoise', ...
+     'CopyMove', 'Desynchronization'};
+
+ATK_PARAMS_TEST = {5, 0, 0, 1, 5, 3, 0, 0, 0.9, 0.9, 0.9, 10, 256, 0};
+
+% Set to 0 to compute FULL SIZE features
+% Set to 1 to subsample while(max(size)) > 2200
+% Set to 2 to subsample while(max(size)) > 1600
+SUBSAMP = 2;
+
+PHASES = {'TRAIN', 'TEST'};
+
+%-------------------------------------------------------------------------%
+% SPLIT DATASET INTO TWO FOLDERS: TRAIN AND TEST 
+%-------------------------------------------------------------------------%
+
+% Check if TRAIN folder has images. If so, do not split, otherwise split
+files = dir([FEATURES_TARGET_ROOT '\' DATASET_TRAIN_ROOT '\*' IMG_FORMAT]);
+
+if size(files,1) == 0
+    Split_Dataset( DATASET_PATH, FEATURES_TARGET_ROOT, DATASET_TRAIN_ROOT, ...
+                 DATASET_TEST_ROOT, IMG_FORMAT, N_TRAIN);
+else
+   fprintf('Skipping split phase: it seems this has been done already\n');
+end
+
+%-------------------------------------------------------------------------%
+% EXTRACT FEATURES OF SINGLE, DOUBLE IMAGES FOR TRAIN AND TEST
+%-------------------------------------------------------------------------%
+for f=1:numel(PHASES)
+
+    Extract_Single_Double_Features(FEATURES_TARGET_ROOT, IMG_FORMAT, SUBSAMP, ...
+                QF_1, QF_2, PHASES{f});
+                        
+end
+
+%-------------------------------------------------------------------------%
+% EXTRACT ATTACKED FEATURES FOR TRAIN AND TEST
+%-------------------------------------------------------------------------%
+for f=1:numel(PHASES)
+    
+    ATTACKS = eval(['ATTACKS_' upper(PHASES{f})]);
+    ATK_PARAMS = eval(['ATK_PARAMS_' upper(PHASES{f})]);
+    
+    Extract_Attacked_Features(FEATURES_TARGET_ROOT, IMG_FORMAT, SUBSAMP, ...
+                QF_1, QF_2, PHASES{f}, ATTACKS, ATK_PARAMS);
+end
